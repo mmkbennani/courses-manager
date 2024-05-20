@@ -1,0 +1,49 @@
+spring:
+  main:
+    banner-mode: "off"
+  jackson:
+    default-property-inclusion: NON_NULL
+  codec:
+    # Max file size
+    max-in-memory-size: 5MB
+  sleuth:
+    enabled: true
+    propagation-keys:
+      - correlationId
+    log:
+      slf4j:
+        enabled: true
+        whitelisted-mdc-keys:
+          - correlationId
+
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      base-path: "/"
+      path-mapping:
+        health: "-"
+      exposure:
+        include: health
+  endpoint:
+    health:
+      enabled: true
+      probes:
+        enabled: true
+      group:
+        liveness:
+          additional-path: "server:/healthy"
+          show-components: always
+          include: livenessState
+        readiness:
+          additional-path: "server:/ready"
+          show-components: always
+          include: readinessState
+
+
+cookies:
+  xApikey:
+    AIzaSyD1rQrVq_by0mUQ_ot6yR9uAWqhy-wqFBY
+api:
+  base-url:
+    post: https://sandbox.api.piperks.com/deviceReceipts?state=incomplete

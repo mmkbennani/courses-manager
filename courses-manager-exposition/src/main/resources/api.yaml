@@ -1,0 +1,219 @@
+openapi: 3.0.3
+info:
+  title: Drive and deliver APIs
+  description: This section contains endpoints to choose an option and then chose slot of time.
+  version: 2.0.0
+servers:
+  - url: https://api.carrefour.com/drive-and-deliver/
+    description: Production
+security:
+  - bearerAuth: []
+paths:
+  /v1/course:
+    parameters:
+      - $ref: '#/components/parameters/X-Correlation-ID'
+    post:
+      tags:
+        - Créer une nouvelle course avec leurs partants.
+      description: Endpoint qui permet de créer une nouvelle course avec leurs partants et de les exposer au reste du SI par un message publié sur un bus.
+      operationId: createCourse
+      requestBody:
+        description: createCourse.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/createCourse'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+          headers:
+            X-Correlation-ID:
+              $ref: '#/components/headers/X-Correlation-ID'
+        '401':
+          $ref: '#/components/responses/error401'
+        '403':
+          $ref: '#/components/responses/error403'
+        '404':
+          $ref: '#/components/responses/error404'
+        '500':
+          $ref: '#/components/responses/response500'
+      parameters:
+        - $ref: '#/components/parameters/X-Correlation-ID'
+components:
+  headers:
+    X-Correlation-ID:
+      description: Value echoed from the request.
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
+        format: uuid
+      example: 16427231-b0bc-4d2b-91b2-514066c153c1
+    Location:
+      description: The Location HTTP header contains the path of the element.
+      required: true
+      schema:
+        type: string
+      example: https://api.ppaas.com/digital-receipt/v1/receipts
+
+  parameters:
+    X-Correlation-ID:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      description: Identifier value used to monitor the correlation of the requests.
+      schema:
+        type: string
+        format: uuid
+      example: 16427231-b0bc-4d2b-91b2-514066c153c1
+  responses:
+    error401:
+      description: Unauthorized. Authentication of the caller failed.
+    error403:
+      description: Forbidden. The caller does not have the access rights required
+        for this operation.
+    error404:
+      description: NotFound
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/errorReport'
+          example:
+            type: https://carrefour.tech/errors/not-found
+            title: The identifier does not match an existing resource
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/X-Correlation-ID'
+    response500:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - type
+              - title
+            additionalProperties: false
+            properties:
+              title:
+                type: string
+                example: An error has occurred.
+              details:
+                type: string
+                example: An error has occurred.
+              type:
+                type: string
+                example: https://carrefour.tech/errors/unexpected-error
+      headers:
+        X-Correlation-ID:
+          $ref: '#/components/headers/X-Correlation-ID'
+  schemas:
+    Error:
+      required:
+        - title
+        - type
+      allOf:
+        - $ref: '#/components/schemas/uniqueError'
+        - type: object
+      properties:
+        type:
+          type: string
+          description: The error code
+          example: https://carrefour.tech/errors/TH-ERR-01
+          enum:
+            - https://carrefour.tech/errors/DR-ERR-01
+            - https://carrefour.tech/errors/DR-ERR-02
+            - https://carrefour.tech/errors/DR-ERR-03
+            - https://carrefour.tech/errors/DR-ERR-04
+            - https://carrefour.tech/errors/DR-ERR-05
+            - https://carrefour.tech/errors/DR-ERR-06
+            - https://carrefour.tech/errors/DR-ERR-07
+            - https://carrefour.tech/errors/DR-ERR-08
+            - https://carrefour.tech/errors/DR-ERR-09
+    createCourse:
+      type: object
+      required: [ deliveryOption, customerId ]
+      nullable: false
+      properties:
+        date:
+          description: Date de la course
+          type: string
+          example: '2022-01-30'
+        numero:
+          description: Id de la course
+          type: number
+          example: 1
+        nom:
+          description: nom de la course
+          type: string
+          example: 'Pris d''Amérique'
+        partants:
+          description: list des partants
+          type: array
+          minItems: 3
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/partants'
+    partants:
+      type: object
+      properties:
+        numero:
+          description: numero du partant
+          type: number
+          example: 1
+        nom:
+          description: nom du partant
+          type: string
+          example: HORSY DREAM
+    errorReport:
+      allOf:
+        - description: Error report following RFC 7807
+          type: object
+          properties:
+            errors:
+              type: array
+              description: optional list of sub-errors
+              items:
+                $ref: '#/components/schemas/uniqueError'
+              example:
+                - type: https://carrefour.tech/errors/wrong-csv-value
+                  title: The value of colum XYZ is wrong
+                  details: The value should be an integer
+                  instance: line 24
+        - $ref: '#/components/schemas/uniqueError'
+    uniqueError:
+      required:
+        - title
+        - type
+      type: object
+      properties:
+        type:
+          type: string
+          description: this technical code is used to identify the error type, useful
+            for automated testing
+          example: https://carrefour.tech/errors/wrong-csv-format
+        title:
+          type: string
+          description: short description of the error in clear text
+          example: Your request parameters did not validate.
+        details:
+          type: string
+          description: optional clear text describing the detail of the error
+          example: The document does not match the requested CSV format
+        instance:
+          type: string
+          description: optional path of the resource linked to the error
+          example: /bulk-processing/v1/campaigns/123e4567-e89b-12d3-a456-426614174000
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

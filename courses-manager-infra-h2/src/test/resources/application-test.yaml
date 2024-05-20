@@ -1,0 +1,93 @@
+logging:
+  level:
+    org:
+      apache:
+        http: "DEBUG"
+    reactor:
+      netty:
+        http:
+          client: "DEBUG"
+
+keycloak:
+  base-url: "https://auth.dev.ppaas.tech"
+  service-account:
+    client-id: dr_hub
+    client-secret: "LCyWa2D4KPEGxd6TuFnJfXUgDE5rQtwL"
+    #client-id: bulk_processing
+    #client-secret: "48b4159f-d6b3-4ed5-8cdf-4725350abea0"
+
+
+
+server:
+  port: 8091
+
+context:
+  base-url: http://localhost:9093/v1/operation-context
+receipt:
+  base-url: http://localhost:9092/v1/receipts
+
+management:
+  endpoints:
+    enabled-by-default: false
+    web:
+      base-path: "/"
+      path-mapping:
+        health: "-"
+      exposure:
+        include: health
+  endpoint:
+    health:
+      enabled: true
+      probes:
+        enabled: true
+      group:
+        liveness:
+          additional-path: "server:/healthy"
+          show-components: always
+          include: livenessState
+        readiness:
+          additional-path: "server:/ready"
+          show-components: always
+          include: readinessState
+api:
+  base-url:
+    context: http://localhost:57285/v1/operation-context
+    receipt:
+      post: http://localhost:9002/v2/receipts/store
+      get: http://localhost:9002/v2/receipts/{clientTransactionId}/owner/{owner}
+    payment-engine:
+      payment-engine-channel-integration: http://localhost:9095/card-tokens/{serverTransactionId}/token
+      payment-engine-internal-configurations: http://localhost:9097/transactiondata/{deviceId}
+    payment-service:
+      token-hub: http://localhost:9096/id-tokens
+    provisioning:
+      logical-devices:
+        list: https://api.dev.ppaas.tech/provisioning/v1/logical-devices/list
+    configuration:
+      configuration-api: http://localhost:9099/v1/formatted-applicable-configuration
+    reporting:
+      transactions:
+        get: http://localhost:9098/transactions/{serverTransactionId}
+    admin-control-payment:
+      subscription: https://api.dev.ppaas.tech/subscription-subscriber/v1/package-subscriptions
+      sendOptions: https://api.dev.ppaas.tech/admin-control-payment/v1/PPaasService/GetServiceConfigurationsForMA/{serviceId}/{merchantId}/logical-device
+provider:
+  service-native:
+    postReceipt: http://localhost:9002/v2/receipts
+    postConsumer: http://localhost:9094/v1/consumers
+
+kafka:
+  url: localhost:9092
+  topicname: billing-usage
+  connect: "ppaas-kafka-brokers.kafka:9092"
+
+redis:
+  host: localhost
+  port: 6379
+  username: default
+  password: foobared
+  database: 0
+  cache:
+    lengthOfValidity: 1
+    unitOfValidity: DAYS
+

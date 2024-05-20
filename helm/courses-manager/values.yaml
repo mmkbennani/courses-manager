@@ -1,0 +1,32 @@
+global:
+  nameOverride: pixcel-proxy
+  fullnameOverride: pixcel-proxy
+  labels:
+    app.kubernetes.io/part-of: ppaas
+    app.ppaas.io/technology: java
+image:
+  repository: digital-receipt-pixcel-proxy
+
+upstream:
+  enableMtls: true
+
+podLabels:
+  app.ppaas.io/technology: java
+# -- tolerations for PODs
+tolerations:
+  - effect: NoSchedule
+    key: non-cde
+    operator: Equal
+    value: 'true'
+# -- nodeSelector for PODs
+nodeSelector:
+  role: non-cde
+
+secret:
+  data:
+
+config:
+  global:
+    ppaasdomain: ''
+  data:
+    

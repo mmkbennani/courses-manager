@@ -1,0 +1,8 @@
+name: ppaas-digital-receipt-pixcel-proxy
+version: 0.0.0
+appVersion: 0.0.0
+dependencies:
+  - name: ppaas-lib
+    version: 3.1.1
+    repository: https://registry.tools.ppaas.tech/chartrepo/ppaas
+apiVersion: v2
